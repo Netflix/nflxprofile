@@ -8,7 +8,7 @@ setuptools.setup(
     version="1.0.0",
     author="Matheus Marchini",
     author_email="mmarchini@netflix.com",
-    description="A small example package",
+    description="Protobuf specification of the nflxprofile format",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Netflix/nflxprofile",
