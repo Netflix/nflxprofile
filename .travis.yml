@@ -1,0 +1,22 @@
+matrix:
+  include:
+    - name: Python
+      language: python
+      python:
+        - '3.5'
+
+      before_script: cd python/
+
+      # TODO(mmarchini):
+      script: python setup.py test
+
+      deploy:
+        skip_cleanup: true
+        provider: pypi
+        server: https://test.pypi.org/legacy/
+        on:
+          branch: travis
+        user:
+          secure: "SRuUhYyVjLIOWbzB61U0Ev++OdlTAhapytwdGfyiGQwoXiniHDgbLc3Obz3V++Rdc2WzgdhhVOoSrTAU7319oSW4W7KemIZFLV0msTAndc92BInPkFMENI3NT5VhjRQdldNcSqxuvnCeeNoitCqLs5KRv0GlTu8HFxqtyvO6XHvQszTJmJNmG7uZ2izic17Av6wLdKlVnHjMhLyNgjkviyOGhPgVyZhzR0F+VcXyafzynFNuUqFtzf+qG2afgxSVBDzQp/0zVR4Z5y+O2AsZXk9T61GfRQdqJ0mp/fWx+4IzNzoZtg1XlC2XXyKTuFkzZIOTUlGLomXCqgfaUC/X6si0b6YL/Hon0Ci67EDBwlfR4rHuVbNR9I4DJFpTq/pYSBVVgsQ6cd9OF4jx1Mc+1emrbCbvN5CU5a2AqOps6/8nrmNOhKzIpVI0L332ng7Ivv9nTv5EONZN0IfSDiE0njgU/bk+s9i4E24YW7JKuEdiaEADWg0wBipIjro9ySDA1gcD6w/c5kAKrpTQGWiB2pENM8Kmp9fNuRLrIVF67cPcACjwHJoDiUpsIdTfys4KHYQLlAUvzABi/BeddguGu3cBTfMy3XaMUIHVVCLlNCl5DGHCgHgWyPJq8nUcg4UKP97R5ah5LrzsQjA7xxHPsb9tOrDxONyPyfu78Fe6oRM="
+        password:
+          secure: "Mx5Ukh+xuIBwxgZ2D+DwL/nKg4C4yYIuNKci0tMvbVUO5XT0csJCRt7bVwxtGbwqbp7/UkE2+/maQ3PCPZpIDQKZRFheXSG9anjdEIPj8rpLlkZQzmUqLwvEyr2jsUtt0jU/nDRq+Tt5+SKQR+pbfpoVmzUdM5OjL3JhDCMRrG7muIGlsXFy7hQX+SrQPySDHxD5jJNil8gIvyc90kh0dlolKE8gcqoISFa129B1nbV1+YETEFG/fIjwZw8YXlLhZvfr+wjdmqxXVmkLoh7vIbxz1ztjJGkjaa6TM4Ib8jZ7pC9fzFLvBppzT47YOOWM9Bc9s8mMsKk4XirSnHyM0UpCXi0q6fxw7Eb+a2COQLQPEG0n5+r5KnQFS9GuM39mo7egf1xPbWTJU5cYcU79/NPiYVVYqkoswus1GIL5fdWFnnKKbs5hTCeb6ya62RICBDVe+LQpeTLPQau2JwHyanWcCdZtWqpvAW/HpviD/LFOmtHEs0c2DD7tsxmCGMvxy785ym5StXM5e4SfH2g4b9IBaBCT7XgL+6ZrvZEgMuaVQJyRyzpaQHYyETADhkW9Z1QgSi+RYkgCSVqjYukLl2JTqI2tXvK/xlwjpGQXo4ufe9EH3Av505+XeJsIvysrdXB7EdqFQvZ0CRZX8JS1h1/IHst1/yHqsB7zkhljsb0="
