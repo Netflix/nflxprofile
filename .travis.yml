@@ -1,0 +1,21 @@
+matrix:
+  include:
+    - name: Python
+      language: python
+      python:
+        - '3.5'
+
+      before_script: cd python/
+
+      # TODO(mmarchini):
+      script: python setup.py test
+
+      deploy:
+        skip_cleanup: true
+        provider: pypi
+        on:
+          tags: true
+        user:
+          secure: "SRuUhYyVjLIOWbzB61U0Ev++OdlTAhapytwdGfyiGQwoXiniHDgbLc3Obz3V++Rdc2WzgdhhVOoSrTAU7319oSW4W7KemIZFLV0msTAndc92BInPkFMENI3NT5VhjRQdldNcSqxuvnCeeNoitCqLs5KRv0GlTu8HFxqtyvO6XHvQszTJmJNmG7uZ2izic17Av6wLdKlVnHjMhLyNgjkviyOGhPgVyZhzR0F+VcXyafzynFNuUqFtzf+qG2afgxSVBDzQp/0zVR4Z5y+O2AsZXk9T61GfRQdqJ0mp/fWx+4IzNzoZtg1XlC2XXyKTuFkzZIOTUlGLomXCqgfaUC/X6si0b6YL/Hon0Ci67EDBwlfR4rHuVbNR9I4DJFpTq/pYSBVVgsQ6cd9OF4jx1Mc+1emrbCbvN5CU5a2AqOps6/8nrmNOhKzIpVI0L332ng7Ivv9nTv5EONZN0IfSDiE0njgU/bk+s9i4E24YW7JKuEdiaEADWg0wBipIjro9ySDA1gcD6w/c5kAKrpTQGWiB2pENM8Kmp9fNuRLrIVF67cPcACjwHJoDiUpsIdTfys4KHYQLlAUvzABi/BeddguGu3cBTfMy3XaMUIHVVCLlNCl5DGHCgHgWyPJq8nUcg4UKP97R5ah5LrzsQjA7xxHPsb9tOrDxONyPyfu78Fe6oRM="
+        password:
+	  secure: "YKDag2XB3v5IwpvJ2zzdO+Bdw5aU2KPWVtqm+ZW3WHmdcvieWwMNIXIszyCCdVbrCMMrOPLNQLAwogUlOHDTukKxhZgg1gCWob8SG22E+9h2E+I129x+SCNzFP6VIwWTStFk+ItpaoFUv5WqkH/8+2exqJAGOXFKxpnyEf+jKSG5sLQxH4JyTWssHkKHPUmnCPvAsUoNxAig2MTAyIENeHa/wfxXAovdONVI+bctywv6jXC0rBXqwgA+HhMJrFxVqfyZB7ZGaa05kLGKB4tjJ2XPpgS3u6dDtVASGlOWHJTZy20iLKx+aWaWi0tuBy8RDnQ0fMy1eFOXhjqu2F89UBu7yYriBu1zzQB50cQsLx8Mz1zJkkr1BDN0cb80P7JnzWDEDoB5CcXEV4hTaaK0uzV2ay7zpiydET7J430eKuZ9LwCO4D/D8y4PsfcodWsjgfTkM2qD0QghMGlOua3Pnw0Z+/lKIT5sCFpCYO8tMd+Pc8lR7dxF1zRMY13F10fCZdYQdKAbm00eODFcawLYiL2GTCU/lTA7Crq3N+EGuUQ0IhsY1BRWbnTWS1ISDHGaOG523fhoAoddqyHc8rgmwe+xqoByUuypF2GtIP7I+AkSM2rZX6i6svJuv0UivjEPsrGWnbabWmAoTi4lnHwehHjcvrJosRRM7fsvJ+8YZww="
