@@ -20,10 +20,55 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='nflxprofile',
   syntax='proto2',
   serialized_options=None,
-  serialized_pb=_b('\n\x11nflxprofile.proto\x12\x0bnflxprofile\"4\n\nStackFrame\x12\x15\n\rfunction_name\x18\x01 \x02(\t\x12\x0f\n\x07libtype\x18\x02 \x01(\t\"\x85\x05\n\x07Profile\x12\x12\n\nstart_time\x18\x01 \x02(\x01\x12\x10\n\x08\x65nd_time\x18\x02 \x02(\x01\x12\x13\n\x07samples\x18\x03 \x03(\rB\x02\x10\x01\x12\x17\n\x0btime_deltas\x18\x04 \x03(\x01\x42\x02\x10\x01\x12.\n\x05nodes\x18\x05 \x03(\x0b\x32\x1f.nflxprofile.Profile.NodesEntry\x12\r\n\x05title\x18\x06 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x07 \x01(\t\x12\x30\n\x06params\x18\x08 \x03(\x0b\x32 .nflxprofile.Profile.ParamsEntry\x12\x17\n\x0bsamples_cpu\x18\t \x03(\rB\x02\x10\x01\x12\x17\n\x0bsamples_pid\x18\n \x03(\rB\x02\x10\x01\x12\x17\n\x0bsamples_tid\x18\x0b \x03(\rB\x02\x10\x01\x12\x19\n\rsamples_value\x18\x0c \x03(\x04\x42\x02\x10\x01\x1a\xc1\x01\n\x04Node\x12\x15\n\rfunction_name\x18\x01 \x02(\t\x12\x11\n\thit_count\x18\x02 \x02(\r\x12\x10\n\x08\x63hildren\x18\x03 \x03(\r\x12\x0f\n\x07libtype\x18\x04 \x01(\t\x12\x0e\n\x06parent\x18\x05 \x01(\r\x12\x0b\n\x03pid\x18\x06 \x01(\r\x12\x0b\n\x03tid\x18\x07 \x01(\r\x12\x0b\n\x03\x63pu\x18\x08 \x01(\r\x12\r\n\x05value\x18\t \x01(\x04\x12&\n\x05stack\x18\n \x03(\x0b\x32\x17.nflxprofile.StackFrame\x1aG\n\nNodesEntry\x12\x0b\n\x03key\x18\x01 \x01(\r\x12(\n\x05value\x18\x02 \x01(\x0b\x32\x19.nflxprofile.Profile.Node:\x02\x38\x01\x1a-\n\x0bParamsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01')
+  serialized_pb=_b('\n\x11nflxprofile.proto\x12\x0bnflxprofile\"7\n\x04\x46ile\x12\x11\n\tfile_name\x18\x01 \x02(\t\x12\x0c\n\x04line\x18\x02 \x01(\r\x12\x0e\n\x06\x63olumn\x18\x03 \x01(\r\"U\n\nStackFrame\x12\x15\n\rfunction_name\x18\x01 \x02(\t\x12\x0f\n\x07libtype\x18\x02 \x01(\t\x12\x1f\n\x04\x66ile\x18\x03 \x01(\x0b\x32\x11.nflxprofile.File\"\xa6\x05\n\x07Profile\x12\x12\n\nstart_time\x18\x01 \x02(\x01\x12\x10\n\x08\x65nd_time\x18\x02 \x02(\x01\x12\x13\n\x07samples\x18\x03 \x03(\rB\x02\x10\x01\x12\x17\n\x0btime_deltas\x18\x04 \x03(\x01\x42\x02\x10\x01\x12.\n\x05nodes\x18\x05 \x03(\x0b\x32\x1f.nflxprofile.Profile.NodesEntry\x12\r\n\x05title\x18\x06 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x07 \x01(\t\x12\x30\n\x06params\x18\x08 \x03(\x0b\x32 .nflxprofile.Profile.ParamsEntry\x12\x17\n\x0bsamples_cpu\x18\t \x03(\rB\x02\x10\x01\x12\x17\n\x0bsamples_pid\x18\n \x03(\rB\x02\x10\x01\x12\x17\n\x0bsamples_tid\x18\x0b \x03(\rB\x02\x10\x01\x12\x19\n\rsamples_value\x18\x0c \x03(\x04\x42\x02\x10\x01\x1a\xe2\x01\n\x04Node\x12\x15\n\rfunction_name\x18\x01 \x02(\t\x12\x11\n\thit_count\x18\x02 \x02(\r\x12\x10\n\x08\x63hildren\x18\x03 \x03(\r\x12\x0f\n\x07libtype\x18\x04 \x01(\t\x12\x0e\n\x06parent\x18\x05 \x01(\r\x12\x0b\n\x03pid\x18\x06 \x01(\r\x12\x0b\n\x03tid\x18\x07 \x01(\r\x12\x0b\n\x03\x63pu\x18\x08 \x01(\r\x12\r\n\x05value\x18\t \x01(\x04\x12&\n\x05stack\x18\n \x03(\x0b\x32\x17.nflxprofile.StackFrame\x12\x1f\n\x04\x66ile\x18\x0b \x01(\x0b\x32\x11.nflxprofile.File\x1aG\n\nNodesEntry\x12\x0b\n\x03key\x18\x01 \x01(\r\x12(\n\x05value\x18\x02 \x01(\x0b\x32\x19.nflxprofile.Profile.Node:\x02\x38\x01\x1a-\n\x0bParamsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01')
 )
 
 
+
+
+_FILE = _descriptor.Descriptor(
+  name='File',
+  full_name='nflxprofile.File',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='file_name', full_name='nflxprofile.File.file_name', index=0,
+      number=1, type=9, cpp_type=9, label=2,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='line', full_name='nflxprofile.File.line', index=1,
+      number=2, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='column', full_name='nflxprofile.File.column', index=2,
+      number=3, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto2',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=34,
+  serialized_end=89,
+)
 
 
 _STACKFRAME = _descriptor.Descriptor(
@@ -47,6 +92,13 @@ _STACKFRAME = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='file', full_name='nflxprofile.StackFrame.file', index=2,
+      number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -59,8 +111,8 @@ _STACKFRAME = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=34,
-  serialized_end=86,
+  serialized_start=91,
+  serialized_end=176,
 )
 
 
@@ -141,6 +193,13 @@ _PROFILE_NODE = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='file', full_name='nflxprofile.Profile.Node.file', index=10,
+      number=11, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -153,8 +212,8 @@ _PROFILE_NODE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=421,
-  serialized_end=614,
+  serialized_start=511,
+  serialized_end=737,
 )
 
 _PROFILE_NODESENTRY = _descriptor.Descriptor(
@@ -190,8 +249,8 @@ _PROFILE_NODESENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=616,
-  serialized_end=687,
+  serialized_start=739,
+  serialized_end=810,
 )
 
 _PROFILE_PARAMSENTRY = _descriptor.Descriptor(
@@ -227,8 +286,8 @@ _PROFILE_PARAMSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=689,
-  serialized_end=734,
+  serialized_start=812,
+  serialized_end=857,
 )
 
 _PROFILE = _descriptor.Descriptor(
@@ -334,20 +393,30 @@ _PROFILE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=89,
-  serialized_end=734,
+  serialized_start=179,
+  serialized_end=857,
 )
 
+_STACKFRAME.fields_by_name['file'].message_type = _FILE
 _PROFILE_NODE.fields_by_name['stack'].message_type = _STACKFRAME
+_PROFILE_NODE.fields_by_name['file'].message_type = _FILE
 _PROFILE_NODE.containing_type = _PROFILE
 _PROFILE_NODESENTRY.fields_by_name['value'].message_type = _PROFILE_NODE
 _PROFILE_NODESENTRY.containing_type = _PROFILE
 _PROFILE_PARAMSENTRY.containing_type = _PROFILE
 _PROFILE.fields_by_name['nodes'].message_type = _PROFILE_NODESENTRY
 _PROFILE.fields_by_name['params'].message_type = _PROFILE_PARAMSENTRY
+DESCRIPTOR.message_types_by_name['File'] = _FILE
 DESCRIPTOR.message_types_by_name['StackFrame'] = _STACKFRAME
 DESCRIPTOR.message_types_by_name['Profile'] = _PROFILE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
+
+File = _reflection.GeneratedProtocolMessageType('File', (_message.Message,), {
+  'DESCRIPTOR' : _FILE,
+  '__module__' : 'nflxprofile_pb2'
+  # @@protoc_insertion_point(class_scope:nflxprofile.File)
+  })
+_sym_db.RegisterMessage(File)
 
 StackFrame = _reflection.GeneratedProtocolMessageType('StackFrame', (_message.Message,), {
   'DESCRIPTOR' : _STACKFRAME,
