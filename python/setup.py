@@ -19,4 +19,9 @@ setuptools.setup(
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
+    entry_points={
+        'console_scripts': [
+            'nflxprofile = nflxprofile.cli:main'
+        ]
+    }
 )
