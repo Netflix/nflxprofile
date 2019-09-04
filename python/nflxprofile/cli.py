@@ -5,20 +5,25 @@ from nflxprofile.convert.v8_cpuprofile import parse as v8_parse
 
 def main():
     parser = argparse.ArgumentParser(prog="nflxprofile", description='Parse common profile/tracing formats into nflxprofile')
-    parser.add_argument('input')
     parser.add_argument('--output')
     parser.add_argument('--force', action="store_true")
+    parser.add_argument('--extra-options', type=json.loads)
+    parser.add_argument('input', nargs="+")
 
     args = parser.parse_args()
 
-    original = args.input
+    filenames = args.input
+    extra_options = args.extra_options or {}
     out = args.output
     if not out:
-        out = original.rsplit('.', 1)[0] + '.nflxprofile'
+        out = 'profile.nflxprofile'
 
     profile = None
-    with open(original, 'r') as f:
-        profile = v8_parse(json.loads(f.read()))
+    profiles = []
+    for filename in filenames:
+        with open(filename, 'r') as f:
+            profiles.append(json.loads(f.read()))
+    profile = v8_parse(profiles, **extra_options)
 
     with open(out, 'wb') as f:
         f.write(profile.SerializeToString())
