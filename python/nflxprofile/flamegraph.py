@@ -1,16 +1,30 @@
 """Flame graph module for generating flame graphs from nflxprofile profiles."""
 
+__ALL__ = ['get_flame_graph', 'StackProcessor', 'NodeJsStackProcessor']
+
 import math
 from nflxprofile import nflxprofile_pb2
 
 # pylint: disable=too-few-public-methods
 
-def _get_child(node, name, libtype):
+def _get_child(node, frame):
+    """Docstring for public method."""
+    if isinstance(frame, dict):
+        name = frame.get('name', "")
+        libtype = frame.get("libtype", "")
+        filename = frame.get('extras', {}).get('file', "")
+    else:
+        name = frame.function_name
+        libtype = frame.libtype
+        filename = frame.file.file_name or ""
+        if filename:
+            filename = "%s:%d" % (filename, frame.file.line or 0)
     for child in node['children']:
         if child['name'] == name and child['libtype'] == libtype:
-            return child
+            child_file = child.get('extras', {}).get('file', "")
+            if filename == child_file:
+                return child
     return None
-
 
 def _generate_regular_stacks(nflxprofile_nodes, root_node_id):
     stacks = {}
@@ -106,6 +120,161 @@ def _get_stack(nflxprofile_nodes, node_id, has_node_stack=False, pid_comm=None, 
             break
         nflxprofile_node_id = nflxprofile_node.parent
     return stack
+
+
+class FrameExtras:
+    """Generic class to store extra information about a stack frame."""
+
+    def __init__(self):
+        """Constructor."""
+        self.v8_jit = False
+        self.javascript = False
+        self.real_name = ""
+        self.optimized = None
+
+    def __repr__(self):
+        return "FrameExtras(v8_jit=%s, javascript=%s, real_name=%s, optimized=%s)" % (self.v8_jit, self.javascript, self.real_name, self.optimized)
+
+
+class Frame:
+    def __init__(self, frame):
+        self.frame = frame
+
+    def __getattr__(self, name):
+        return getattr(self.frame, name)
+
+
+class StackProcessor:
+    """Processes a stack trace, extend it to add custom processing."""
+
+    def __init__(self, root, profile, index, value=1):
+        """Constructor."""
+        self.current_node = root
+        self.value = value
+        self.empty_extras = FrameExtras()
+
+    def process_frame(self, frame):
+        """Process one frame, returning the processed frame plus extras."""
+        return frame, self.empty_extras
+
+    # pylint: disable=no-self-use
+    def should_skip_frame(self, frame, frame_extras):
+        """Check if this frame should be skipped."""
+        return False
+
+    def process_extras(self, child, frame, frame_extras):
+        """Process extras and save it in the given node."""
+        extras = child.get('extras', {})
+
+        if frame.file.file_name:
+            extras = child.get('extras', {})
+            if 'file' not in extras:
+                extras['file'] = frame.file.file_name
+                if extras['file']:
+                    extras['file'] = ('%s:%d' % (extras['file'], frame.file.line))
+            child['extras'] = extras
+        child['extras'] = extras
+
+    def process(self, stack):
+        """Processes a stack trace.
+
+        You probably want to avoid overriding this method. Override other
+        methods to customize behavior instead.
+        """
+        for frame in stack:
+            frame, frame_extras = self.process_frame(frame)
+            if self.should_skip_frame(frame, frame_extras):
+                continue
+            child = _get_child(self.current_node, frame)
+            if child is None:
+                child = {
+                    'name': frame.function_name,
+                    'libtype': frame.libtype,
+                    'value': 0,
+                    'children': []
+                }
+                self.current_node['children'].append(child)
+            self.process_extras(child, frame, frame_extras)
+            self.current_node = child
+        self.current_node['value'] = self.current_node['value'] + self.value
+
+
+class NodeJsStackProcessor(StackProcessor):
+    """Node.js mode stack processor.
+
+    Sanitize JIT function names, extract file name from frame name, group
+    interpreted and compiled function, flag V8 builtins, hide
+    ArgumentsAdaptorTrampoline frames (but store count in the next frame so we
+    can exhibit this information on the interface).
+    """
+
+    def __init__(self, root, profile, index, value=1):
+        """Constructor."""
+        super().__init__(root, profile, index, value)
+        self.argument_adaptor = None
+
+    def should_skip_frame(self, frame, frame_extras):
+        """Skip ArgumentsAdaptorTrampoline.
+
+        ArgumentsAdaptorTrampoline frames are inserted between calls when the
+        caller calls the callee with wrong signature. While this information is
+        relevant (since ArgumentsAdaptorTrampoline is not free), it can mess
+        with frame grouping. Skipping this frame makes sense and we can show
+        information about it in the following frame when hovering it.
+        """
+        if "ArgumentsAdaptorTrampoline" in frame.function_name:
+            self.argument_adaptor = self.value
+            return True
+        return False
+
+    def process_extras(self, child, frame, frame_extras):
+        """Add Node.js specific extras.
+
+        Add % of times a function was called with mismatched arguments, % of
+        times it executed JIT instead of intepreted, as well as some metadata
+        used for coloring the flamegraph.
+        """
+        extras = child.get('extras', {'optimized': 0})
+        extras['javascript'] = frame_extras.javascript
+        extras['v8_jit'] = frame_extras.v8_jit
+        extras['optimized'] = extras['optimized'] + (frame_extras.optimized and self.value or 0)
+        extras['realName'] = frame_extras.real_name
+        if self.argument_adaptor:
+            extras['argumentAdaptor'] = extras.get('argumentAdaptor', 0) + self.argument_adaptor
+            self.argument_adaptor = None
+        child['extras'] = extras
+        super().process_extras(child, frame, frame_extras)
+
+    def process_frame(self, frame):
+        """Process frame.
+
+        Sanitize JIT function names, extract file name from frame name,
+        generate some metadata used by other methods.
+        """
+        processed_frame = Frame(frame)
+        frame_extras = FrameExtras()
+        frame_extras.v8_jit = False
+        frame_extras.javascript = False
+        name = frame.function_name
+
+        frame_extras.real_name = name
+
+        if name.startswith("LazyCompile:") or name.startswith("InterpretedFunction:"):
+            frame_extras.v8_jit = True
+            frame_extras.javascript = True
+            frame_extras.optimized = name.startswith("LazyCompile:")
+
+            name = name[name.index(":") + 1:]
+            if name and name[0] == '*':
+                name = name[1:]
+
+            if " " in name:
+                frame.file.file_name = name[name.index(" ") + 1:]
+                if frame.file.file_name:
+                    name = name[:name.index(" ")]
+            processed_frame.function_name = name or "(anonymous)"
+
+        return processed_frame, frame_extras
 
 
 class SampleFilter:
@@ -221,6 +390,7 @@ def get_flame_graph(profile, pid_comm, **args):
     inverted = args.get("inverted", False)
     package_name = args.get("package_name", False)
     use_sample_value = args.get("use_sample_value", False)
+    stack_processor_class = args.get("stack_processor", StackProcessor)
 
     nodes = profile.nodes
     root_id = 0
@@ -271,33 +441,15 @@ def get_flame_graph(profile, pid_comm, **args):
         if should_skip:
             continue
 
-        sample_value = samples_value[index] if samples_value else None
+        sample_value = 1
+        if use_sample_value:
+            sample_value = samples_value[index] if samples_value else None
+        stack_processor = stack_processor_class(root, profile, index, sample_value)
 
         if stacks:
             stack = stacks[sample] if not inverted else reversed(stacks[sample])
         else:
             stack = _get_stack(nodes, sample, has_node_stack, pid_comm, **args)
-        value = 1
-        if use_sample_value and sample_value:
-            value = sample_value
-        current_node = root
-        for frame in stack:
-            child = _get_child(current_node, frame.function_name, frame.libtype)
-            if child is None:
-                child = {
-                    'name': frame.function_name,
-                    'libtype': frame.libtype,
-                    'value': 0,
-                    'children': []
-                }
-                current_node['children'].append(child)
-            extras = child.get('extras', {})
 
-            if frame.file.file_name:
-                extras = child.get('extras', {})
-                extras['file'] = frame.file.file_name
-                child['extras'] = extras
-            child['extras'] = extras
-            current_node = child
-        current_node['value'] = current_node['value'] + value
+        stack_processor.process(stack)
     return root
