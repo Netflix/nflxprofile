@@ -3,9 +3,9 @@
 __ALL__ = ['get_flame_graph', 'StackProcessor', 'NodeJsStackProcessor']
 
 import math
+
 from nflxprofile import nflxprofile_pb2
 
-# pylint: disable=too-few-public-methods
 
 def _get_child(node, frame):
     """Docstring for public method."""
@@ -25,6 +25,7 @@ def _get_child(node, frame):
             if filename == child_file:
                 return child
     return None
+
 
 def _generate_regular_stacks(nflxprofile_nodes, root_node_id):
     stacks = {}
@@ -133,7 +134,8 @@ class FrameExtras:
         self.optimized = None
 
     def __repr__(self):
-        return "FrameExtras(v8_jit=%s, javascript=%s, real_name=%s, optimized=%s)" % (self.v8_jit, self.javascript, self.real_name, self.optimized)
+        return ("FrameExtras(v8_jit=%s, javascript=%s, real_name=%s, optimized=%s)"
+                % (self.v8_jit, self.javascript, self.real_name, self.optimized))
 
 
 class Frame:
@@ -382,6 +384,7 @@ class TIDSampleFilter(SampleFilter):
             return False
         return self.tid != self.samples_tid[index]
 
+
 # pylint: disable=too-many-locals
 # pylint: disable=too-many-branches
 # pylint: disable=too-many-statements
@@ -416,7 +419,8 @@ def get_flame_graph(profile, pid_comm, **args):
 
     has_node_stack = \
         'has_node_stack' in profile.params and profile.params['has_node_stack'] == 'true'
-    has_parent = 'has_parent' in profile.params and profile.params['has_parent'] == 'true'
+    has_parent = \
+        'has_parent' in profile.params and profile.params['has_parent'] == 'true'
 
     samples_value = None
     if 'hasValues' in profile.params and profile.params['hasValues'] == 'true':
