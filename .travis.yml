@@ -3,12 +3,11 @@ matrix:
     - name: Python
       language: python
       python:
-        - '3.5'
+        - '3.6'
 
-      before_script: cd python/
+      before_script: cd python/ && pip3 install tox
 
-      # TODO(mmarchini):
-      script: python setup.py test
+      script: python3 -m tox
 
       deploy:
         skip_cleanup: true

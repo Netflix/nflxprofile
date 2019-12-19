@@ -42,7 +42,7 @@ def _generate_regular_stacks(nflxprofile_nodes, root_node_id):
             libtype = 'jit'
 
         if filename:
-            if  filename.startswith('file://'):
+            if filename.startswith('file://'):
                 filename = filename[7:]
             stack_frame.file.file_name = filename
             if line >= 0:
@@ -77,12 +77,12 @@ def get_comm(v8_profile, index, **extra_options):
         return "(root)"
     return comms[index]
 
+
 def get_pid(v8_profile, index, **extra_options):
     pids = extra_options.get('pids', [])
     if len(pids) <= index:
         return index + 1
     return pids[index]
-
 
 
 def parse(data, **extra_options):
@@ -134,7 +134,6 @@ def parse(data, **extra_options):
         for index, node_id in enumerate(v8_profile['samples']):
             if node_id in idle_ids:
                 continue
-
 
             stack = None
             if node_id not in node_id_cache:

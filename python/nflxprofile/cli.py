@@ -1,10 +1,12 @@
-import json
 import argparse
+import json
 
 from nflxprofile.convert.v8_cpuprofile import parse as v8_parse
 
+
 def main():
-    parser = argparse.ArgumentParser(prog="nflxprofile", description='Parse common profile/tracing formats into nflxprofile')
+    parser = argparse.ArgumentParser(prog="nflxprofile", description=('Parse '
+                                     'common profile/tracing formats into nflxprofile'))
     parser.add_argument('--output')
     parser.add_argument('--force', action="store_true")
     parser.add_argument('--extra-options', type=json.loads)
