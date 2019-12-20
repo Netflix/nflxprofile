@@ -1,8 +1,10 @@
 """Flame graph module for generating flame graphs from nflxprofile profiles."""
 
-__ALL__ = ['get_flame_graph', 'StackProcessor', 'NodeJsStackProcessor']
+__ALL__ = ['get_flame_graph', 'StackProcessor', 'NodeJsStackProcessor', 'NodeJsPackageStackProcessor']
 
 import math
+import os
+import pathlib
 
 from nflxprofile import nflxprofile_pb2
 
@@ -199,6 +201,92 @@ class StackProcessor:
             self.process_extras(child, frame, frame_extras)
             self.current_node = child
         self.current_node['value'] = self.current_node['value'] + self.value
+
+
+class NodeJsPackageStackProcessor(StackProcessor):
+
+    def __init__(self, root, profile, index, value=1):
+        """Constructor."""
+        super().__init__(root, profile, index, value)
+        self.current_package = None
+        self.packages_cache = {}
+
+    def get_package(self, frame):
+        name = frame.function_name
+        if name in self.packages_cache:
+            return self.packages_cache[name]
+
+        package = None
+        if name.startswith("LazyCompile:") or name.startswith("InterpretedFunction:"):
+            name = name[name.index(":") + 1:]
+            if name and name[0] == '*':
+                name = name[1:]
+
+            if " " in name:
+                package = name[name.index(" ") + 1:]
+
+        if package is not None:
+            if ":" in package:
+                package = package.rsplit(":", 1)[0]
+            if "node_modules" in package:
+                package = pathlib.Path(package.rsplit("node_modules", 1)[1])
+                if package.parts[1].startswith("@"):
+                    package = os.path.join(*package.parts[1:3])
+                else:
+                    package = package.parts[1]
+            elif package.startswith("/") or "[eval" in package:
+                return "(app code)"
+            else:
+                package = "(node api)"
+        else:
+            if frame.libtype == 'kernel':
+                return '(kernel)'
+            else:
+                return '(native)'
+
+        return package
+
+    def process(self, stack):
+        if stack[0].function_name != "node":
+            return
+
+        # We always start with native
+        current_frame = nflxprofile_pb2.StackFrame()
+        current_frame.function_name = "(native)"
+        current_frame.libtype = ""
+        processed_stack = []
+        current_stack = []
+        for frame in stack:
+            package = self.get_package(frame)
+
+            if package == current_frame.function_name or package in ['(kernel)', '(native)']:
+                current_stack.append(frame)
+                continue
+
+            processed_stack.append(current_frame)
+
+            current_frame = nflxprofile_pb2.StackFrame()
+            current_frame.function_name = package
+            current_frame.libtype = ""
+            current_stack = []
+
+        if current_stack and current_stack[-1] in ['(kernel)', '(native)']:
+            for frame in current_stack:
+                package = self.get_package(frame)
+
+                if package == current_frame.function_name:
+                    current_stack.append(frame)
+                    continue
+                processed_stack.append(current_frame)
+
+                current_frame = nflxprofile_pb2.StackFrame()
+                current_frame.function_name = package
+                current_frame.libtype = ""
+            processed_stack.append(current_frame)
+        else:
+            processed_stack.append(current_frame)
+
+        return super().process(processed_stack)
 
 
 class NodeJsStackProcessor(StackProcessor):
