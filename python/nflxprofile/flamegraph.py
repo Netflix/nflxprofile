@@ -247,9 +247,6 @@ class NodeJsPackageStackProcessor(StackProcessor):
         return package
 
     def process(self, stack):
-        if stack[0].function_name != "node":
-            return
-
         # We always start with native
         current_frame = nflxprofile_pb2.StackFrame()
         current_frame.function_name = "(native)"
