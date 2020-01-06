@@ -246,6 +246,22 @@ class NodeJsPackageStackProcessor(StackProcessor):
 
         return package
 
+    def should_skip(self, name):
+        # We'll skip for known, non-expensive builtins which can appear between
+        # JS frames. Showing those would fragment the FlameGraph unecessarily.
+        if 'ArgumentsAdaptorTrampoline' in name:
+            return True
+        if name.startswith('Builtin'):
+            if 'Construct' in name:
+                return True
+            if 'LoadIC' in name or 'StoreIC' in name:
+                return True
+            if 'InterpreterEntryTrampoline' in name:
+                return True
+        if name.startswith('BytecodeHandler'):
+            return True
+        return False
+
     def process(self, stack):
         # We always start with native
         current_frame = nflxprofile_pb2.StackFrame()
@@ -256,7 +272,7 @@ class NodeJsPackageStackProcessor(StackProcessor):
         for frame in stack:
             package = self.get_package(frame)
 
-            if package == current_frame.function_name or package in ['(kernel)', '(native)']:
+            if package == current_frame.function_name or self.should_skip(frame.function_name):
                 current_stack.append(frame)
                 continue
 
@@ -267,21 +283,7 @@ class NodeJsPackageStackProcessor(StackProcessor):
             current_frame.libtype = ""
             current_stack = []
 
-        if current_stack and current_stack[-1] in ['(kernel)', '(native)']:
-            for frame in current_stack:
-                package = self.get_package(frame)
-
-                if package == current_frame.function_name:
-                    current_stack.append(frame)
-                    continue
-                processed_stack.append(current_frame)
-
-                current_frame = nflxprofile_pb2.StackFrame()
-                current_frame.function_name = package
-                current_frame.libtype = ""
-            processed_stack.append(current_frame)
-        else:
-            processed_stack.append(current_frame)
+        processed_stack.append(current_frame)
 
         return super().process(processed_stack)
 
