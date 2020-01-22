@@ -487,7 +487,6 @@ def get_flame_graph(profile, pid_comm, **args):
     use_sample_value = args.get("use_sample_value", False)
     stack_processor_class = args.get("stack_processor", StackProcessor)
 
-
     nodes = profile.nodes
     root_id = 0
 
