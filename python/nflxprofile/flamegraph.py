@@ -82,8 +82,13 @@ def _get_stack(nflxprofile_nodes, node_id, has_node_stack=False, pid_comm=None, 
 
     # package name, only need first node
     if package_name:
-        function_name = nflxprofile_nodes[node_id].function_name.split(';')[0]
-        function_name_arr = function_name.split('/')
+        function_name = nflxprofile_nodes[node_id].function_name
+        if has_node_stack:
+            # uses node stack format, can't use node's function name
+            node_stack = nflxprofile_nodes[node_id].stack
+            function_name = node_stack[-1].function_name
+        sanitized_function_name = function_name.split(';')[0]
+        function_name_arr = sanitized_function_name.split('/')
         for name in function_name_arr:
             stack_frame = nflxprofile_pb2.StackFrame()
             stack_frame.function_name = name
@@ -482,6 +487,7 @@ def get_flame_graph(profile, pid_comm, **args):
     use_sample_value = args.get("use_sample_value", False)
     stack_processor_class = args.get("stack_processor", StackProcessor)
 
+
     nodes = profile.nodes
     root_id = 0
 
@@ -516,6 +522,7 @@ def get_flame_graph(profile, pid_comm, **args):
     stacks = None
     if (not has_node_stack) and (not has_parent):
         # don't have stacks or parent pointer, generating stacks manually
+        # case for very old nflxprofile
         stacks = _generate_stacks(nodes, root_id, package_name)
 
     for index, sample in enumerate(samples):
