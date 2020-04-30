@@ -42,4 +42,5 @@ message Profile {
     repeated uint32 samples_pid = 10 [packed=true];
     repeated uint32 samples_tid = 11 [packed=true];
     repeated uint64 samples_value = 12 [packed=true];
+    optional uint32 idle_sample_count = 13;
 }
