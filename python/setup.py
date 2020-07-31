@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="nflxprofile",
     version="1.5.2",
-    author="Matheus Marchini",
+    author="Mary Marchini",
     author_email="mmarchini@netflix.com",
     description="Protobuf specification of the nflxprofile format",
     long_description=long_description,
