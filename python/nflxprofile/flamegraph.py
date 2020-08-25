@@ -9,7 +9,7 @@ import pathlib
 from nflxprofile import nflxprofile_pb2
 
 
-def _get_child(node, frame):
+def _get_child(node, frame, ignore_libtype):
     """Docstring for public method."""
     if isinstance(frame, dict):
         name = frame.get('name', "")
@@ -22,10 +22,11 @@ def _get_child(node, frame):
         if filename:
             filename = "%s:%d" % (filename, frame.file.line or 0)
     for child in node['children']:
-        if child['name'] == name and child['libtype'] == libtype:
-            child_file = child.get('extras', {}).get('file', "")
-            if filename == child_file:
-                return child
+        if child['name'] == name:
+            if ignore_libtype or child['libtype'] == libtype:
+                child_file = child.get('extras', {}).get('file', "")
+                if filename == child_file:
+                    return child
     return None
 
 
@@ -116,14 +117,13 @@ def _get_stack(nflxprofile_nodes, node_id, has_node_stack=False, pid_comm=None, 
     nflxprofile_node_id = node_id
     while True:
         nflxprofile_node = nflxprofile_nodes[nflxprofile_node_id]
+        stack_frame = nflxprofile_pb2.StackFrame()
+        stack_frame.function_name = nflxprofile_node.function_name
+        stack_frame.libtype = nflxprofile_node.libtype
         if inverted:
-            stack.append((nflxprofile_node.function_name, nflxprofile_node.libtype))
+            stack.append(stack_frame)
         else:
-            stack_frame = nflxprofile_pb2.StackFrame()
-            stack_frame.function_name = nflxprofile_node.function_name
-            stack_frame.libtype = nflxprofile_node.libtype
-            stack.insert(
-                0, stack_frame)
+            stack.insert(0, stack_frame)
         if not nflxprofile_nodes[nflxprofile_node_id].parent:
             break
         nflxprofile_node_id = nflxprofile_node.parent
@@ -156,11 +156,12 @@ class Frame:
 class StackProcessor:
     """Processes a stack trace, extend it to add custom processing."""
 
-    def __init__(self, root, profile, index, value=1):
+    def __init__(self, root, profile, index, value=1, **args):
         """Constructor."""
         self.current_node = root
         self.value = value
         self.empty_extras = FrameExtras()
+        self.ignore_libtype = args.get("ignore_libtype", False)
 
     def process_frame(self, frame):
         """Process one frame, returning the processed frame plus extras."""
@@ -194,14 +195,14 @@ class StackProcessor:
             frame, frame_extras = self.process_frame(frame)
             if self.should_skip_frame(frame, frame_extras):
                 continue
-            child = _get_child(self.current_node, frame)
+            child = _get_child(self.current_node, frame, self.ignore_libtype)
             if child is None:
                 child = {
                     'name': frame.function_name,
-                    'libtype': frame.libtype,
                     'value': 0,
                     'children': []
                 }
+                child['libtype'] = if self.ignore_libtype "" else frame.libtype
                 self.current_node['children'].append(child)
             self.process_extras(child, frame, frame_extras)
             self.current_node = child
@@ -210,9 +211,9 @@ class StackProcessor:
 
 class NodeJsPackageStackProcessor(StackProcessor):
 
-    def __init__(self, root, profile, index, value=1):
+    def __init__(self, root, profile, index, value=1, **args):
         """Constructor."""
-        super().__init__(root, profile, index, value)
+        super().__init__(root, profile, index, value, **args)
         self.current_package = None
         self.packages_cache = {}
 
@@ -302,9 +303,9 @@ class NodeJsStackProcessor(StackProcessor):
     can exhibit this information on the interface).
     """
 
-    def __init__(self, root, profile, index, value=1):
+    def __init__(self, root, profile, index, value=1, **args):
         """Constructor."""
-        super().__init__(root, profile, index, value)
+        super().__init__(root, profile, index, value, **args)
         self.argument_adaptor = None
 
     def should_skip_frame(self, frame, frame_extras):
@@ -541,7 +542,7 @@ def get_flame_graph(profile, pid_comm, **args):
         sample_value = 1
         if use_sample_value:
             sample_value = samples_value[index] if samples_value else None
-        stack_processor = stack_processor_class(root, profile, index, sample_value)
+        stack_processor = stack_processor_class(root, profile, index, sample_value, **args)
 
         if stacks:
             stack = stacks[sample] if not inverted else reversed(stacks[sample])
