@@ -77,6 +77,7 @@ def _get_stack(nflxprofile_nodes, node_id, has_node_stack=False, pid_comm=None, 
     """Get node stack using parent pointers or predefined stack."""
     inverted = args.get("inverted", False)
     package_name = args.get("package_name", False)
+    ignore_libtype = args.get("ignore_libtype", False)
 
     stack = []
 
@@ -92,7 +93,8 @@ def _get_stack(nflxprofile_nodes, node_id, has_node_stack=False, pid_comm=None, 
         for name in function_name_arr:
             stack_frame = nflxprofile_pb2.StackFrame()
             stack_frame.function_name = name
-            stack_frame.libtype = nflxprofile_nodes[node_id].libtype
+            if not ignore_libtype:
+                stack_frame.libtype = nflxprofile_nodes[node_id].libtype
             stack.append(stack_frame)
         if inverted:
             return reversed(stack)
@@ -106,7 +108,8 @@ def _get_stack(nflxprofile_nodes, node_id, has_node_stack=False, pid_comm=None, 
             function_name = pid_comm[pid]
         stack_frame = nflxprofile_pb2.StackFrame()
         stack_frame.function_name = function_name
-        stack_frame.libtype = nflxprofile_nodes[node_id].libtype
+        if not ignore_libtype:
+            stack_frame.libtype = nflxprofile_nodes[node_id].libtype
         stack = [stack_frame] + list(nflxprofile_nodes[node_id].stack)
         if inverted:
             return reversed(stack)
@@ -116,14 +119,14 @@ def _get_stack(nflxprofile_nodes, node_id, has_node_stack=False, pid_comm=None, 
     nflxprofile_node_id = node_id
     while True:
         nflxprofile_node = nflxprofile_nodes[nflxprofile_node_id]
-        if inverted:
-            stack.append((nflxprofile_node.function_name, nflxprofile_node.libtype))
-        else:
-            stack_frame = nflxprofile_pb2.StackFrame()
-            stack_frame.function_name = nflxprofile_node.function_name
+        stack_frame = nflxprofile_pb2.StackFrame()
+        stack_frame.function_name = nflxprofile_node.function_name
+        if not ignore_libtype:
             stack_frame.libtype = nflxprofile_node.libtype
-            stack.insert(
-                0, stack_frame)
+        if inverted:
+            stack.append(stack_frame)
+        else:    
+            stack.insert(0, stack_frame)
         if not nflxprofile_nodes[nflxprofile_node_id].parent:
             break
         nflxprofile_node_id = nflxprofile_node.parent
