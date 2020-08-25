@@ -125,7 +125,7 @@ def _get_stack(nflxprofile_nodes, node_id, has_node_stack=False, pid_comm=None, 
             stack_frame.libtype = nflxprofile_node.libtype
         if inverted:
             stack.append(stack_frame)
-        else:    
+        else:
             stack.insert(0, stack_frame)
         if not nflxprofile_nodes[nflxprofile_node_id].parent:
             break
