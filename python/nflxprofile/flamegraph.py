@@ -202,7 +202,7 @@ class StackProcessor:
                     'value': 0,
                     'children': []
                 }
-                child['libtype'] = if self.ignore_libtype "" else frame.libtype
+                child['libtype'] = "" if self.ignore_libtype else frame.libtype
                 self.current_node['children'].append(child)
             self.process_extras(child, frame, frame_extras)
             self.current_node = child
