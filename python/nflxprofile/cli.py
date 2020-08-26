@@ -3,7 +3,8 @@ import functools
 import json
 
 from nflxprofile.convert.v8_cpuprofile import parse as v8_parse
-from nflxprofile.flamegraph import JavaStackProcessor, NodeJsPackageStackProcessor, NodeJsStackProcessor, StackProcessor, get_flame_graph
+from nflxprofile.flamegraph import JavaStackProcessor, NodeJsPackageStackProcessor, NodeJsStackProcessor, StackProcessor
+from nflxprofile.flamegraph import get_flame_graph
 from nflxprofile.nflxprofile_pb2 import Profile
 
 STACK_PROCESSOR = {

@@ -1,6 +1,10 @@
 """Flame graph module for generating flame graphs from nflxprofile profiles."""
 
-__ALL__ = ['get_flame_graph', 'StackProcessor', 'JavaStackProcessor', 'NodeJsStackProcessor', 'NodeJsPackageStackProcessor']
+__ALL__ = ['get_flame_graph',
+           'StackProcessor',
+           'JavaStackProcessor',
+           'NodeJsStackProcessor',
+           'NodeJsPackageStackProcessor']
 
 import math
 import os
