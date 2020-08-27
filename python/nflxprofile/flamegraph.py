@@ -1,6 +1,10 @@
 """Flame graph module for generating flame graphs from nflxprofile profiles."""
 
-__ALL__ = ['get_flame_graph', 'StackProcessor', 'NodeJsStackProcessor', 'NodeJsPackageStackProcessor']
+__ALL__ = ['get_flame_graph',
+           'StackProcessor',
+           'JavaStackProcessor',
+           'NodeJsStackProcessor',
+           'NodeJsPackageStackProcessor']
 
 import math
 import os
@@ -207,6 +211,31 @@ class StackProcessor:
             self.process_extras(child, frame, frame_extras)
             self.current_node = child
         self.current_node['value'] = self.current_node['value'] + self.value
+
+
+class JavaStackProcessor(StackProcessor):
+    """Java stack processor.
+
+    Sanitize function names, remove interpreter frames.
+    """
+
+    def should_skip_frame(self, frame, frame_extras):
+        """Skip Interpreter frames."""
+        if "Interpreter" in frame.function_name:
+            return True
+        return False
+
+    def process_frame(self, frame):
+        """Process frame."""
+        processed_frame = nflxprofile_pb2.StackFrame()
+        processed_frame.CopyFrom(frame)
+        name = frame.function_name
+
+        if frame.libtype and frame.libtype == 'jit' and name.startswith("L"):
+            name = name[1:]
+            processed_frame.function_name = name
+
+        return processed_frame, self.empty_extras
 
 
 class NodeJsPackageStackProcessor(StackProcessor):
