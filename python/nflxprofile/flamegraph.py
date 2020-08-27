@@ -16,17 +16,17 @@ from nflxprofile import nflxprofile_pb2
 def _get_child(node, frame, ignore_libtype):
     """Docstring for public method."""
     if isinstance(frame, dict):
-        name = frame.get('name', "")
+        name = frame.get('name', "").strip()
         libtype = frame.get("libtype", "")
         filename = frame.get('extras', {}).get('file', "")
     else:
-        name = frame.function_name
+        name = frame.function_name.strip()
         libtype = frame.libtype
         filename = frame.file.file_name or ""
         if filename:
             filename = "%s:%d" % (filename, frame.file.line or 0)
     for child in node['children']:
-        if child['name'] == name:
+        if child['name'].strip() == name:
             if ignore_libtype or child['libtype'] == libtype:
                 child_file = child.get('extras', {}).get('file', "")
                 if filename == child_file:
@@ -202,7 +202,7 @@ class StackProcessor:
             child = _get_child(self.current_node, frame, self.ignore_libtype)
             if child is None:
                 child = {
-                    'name': frame.function_name,
+                    'name': frame.function_name.strip(),
                     'value': 0,
                     'children': []
                 }
