@@ -179,15 +179,13 @@ class StackProcessor:
     def process_extras(self, child, frame, frame_extras):
         """Process extras and save it in the given node."""
         extras = child.get('extras', {})
-
         if frame.file.file_name:
-            extras = child.get('extras', {})
             if 'file' not in extras:
                 extras['file'] = frame.file.file_name
                 if extras['file']:
                     extras['file'] = ('%s:%d' % (extras['file'], frame.file.line))
+        if bool(extras):
             child['extras'] = extras
-        child['extras'] = extras
 
     def process(self, stack):
         """Processes a stack trace.
