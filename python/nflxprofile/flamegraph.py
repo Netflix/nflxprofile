@@ -229,9 +229,18 @@ class JavaStackProcessor(StackProcessor):
         processed_frame.CopyFrom(frame)
         name = frame.function_name
 
+        name = name.split('::')[0]
+        name = name.split('$$')[0]
+
         if frame.libtype and frame.libtype == 'jit' and name.startswith("L"):
             name = name[1:]
-            processed_frame.function_name = name
+
+        if name.endswith(';'):
+            name = name[:-1]
+
+        name = name.replace('/', '.')
+
+        processed_frame.function_name = name
 
         return processed_frame, self.empty_extras
 
