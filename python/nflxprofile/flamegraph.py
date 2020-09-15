@@ -166,6 +166,7 @@ class StackProcessor:
         self.value = value
         self.empty_extras = FrameExtras()
         self.ignore_libtype = args.get("ignore_libtype", False)
+        self.middle_out = args.get("middle_out", None)
 
     def process_frame(self, frame):
         """Process one frame, returning the processed frame plus extras."""
@@ -193,10 +194,25 @@ class StackProcessor:
         You probably want to avoid overriding this method. Override other
         methods to customize behavior instead.
         """
-        for frame in stack:
+        middle_out_filter = True
+        for i, frame in enumerate(stack):
             frame, frame_extras = self.process_frame(frame)
             if self.should_skip_frame(frame, frame_extras):
                 continue
+
+            if self.middle_out and middle_out_filter:
+                # middle out merge and no stack match yet
+                next_frame = stack[i + 1]
+                # checking next frame name for a match
+                if self.middle_out in next_frame.function_name:
+                    # match on the next frame
+                    # process this and everything from here
+                    middle_out_filter = False
+                else:
+                    # no match
+                    # skip frame
+                    continue
+
             child = _get_child(self.current_node, frame, self.ignore_libtype)
             if child is None:
                 child = {
@@ -208,6 +224,8 @@ class StackProcessor:
                 self.current_node['children'].append(child)
             self.process_extras(child, frame, frame_extras)
             self.current_node = child
+        # if the whole stack was skipped, current_node is still root
+        # value goes to root
         self.current_node['value'] = self.current_node['value'] + self.value
 
 
