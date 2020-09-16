@@ -202,7 +202,11 @@ class StackProcessor:
 
             if self.middle_out and middle_out_filter:
                 # middle out merge and no stack match yet
-                next_frame = stack[i + 1]
+                try:
+                    next_frame = stack[i + 1]
+                except IndexError:
+                    # this is the last frame
+                    continue
                 # checking next frame name for a match
                 if self.middle_out in next_frame.function_name:
                     # match on the next frame
