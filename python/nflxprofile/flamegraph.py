@@ -239,6 +239,10 @@ class JavaStackProcessor(StackProcessor):
     Sanitize function names, remove interpreter frames.
     """
 
+    def __init__(self, root, profile, index, value=1, **args):
+        """Constructor."""
+        super().__init__(root, profile, index, value, **args)
+
     def should_skip_frame(self, frame, frame_extras):
         """Skip Interpreter frames."""
         if "Interpreter" in frame.function_name:
