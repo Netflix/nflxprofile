@@ -160,7 +160,7 @@ class Frame:
 class StackProcessor:
     """Processes a stack trace, extend it to add custom processing."""
 
-    def __init__(self, root, profile, index, value=1, **args):
+    def __init__(self, root, profile, value=1, **args):
         """Constructor."""
         self.current_node = root
         self.value = value
@@ -239,9 +239,9 @@ class JavaStackProcessor(StackProcessor):
     Sanitize function names, remove interpreter frames.
     """
 
-    def __init__(self, root, profile, index, value=1, **args):
+    def __init__(self, root, profile, value=1, **args):
         """Constructor."""
-        super().__init__(root, profile, index, value, **args)
+        super().__init__(root, profile, value, **args)
 
     def should_skip_frame(self, frame, frame_extras):
         """Skip Interpreter frames."""
@@ -273,9 +273,9 @@ class JavaStackProcessor(StackProcessor):
 
 class NodeJsPackageStackProcessor(StackProcessor):
 
-    def __init__(self, root, profile, index, value=1, **args):
+    def __init__(self, root, profile, value=1, **args):
         """Constructor."""
-        super().__init__(root, profile, index, value, **args)
+        super().__init__(root, profile, value, **args)
         self.current_package = None
         self.packages_cache = {}
 
@@ -365,9 +365,9 @@ class NodeJsStackProcessor(StackProcessor):
     can exhibit this information on the interface).
     """
 
-    def __init__(self, root, profile, index, value=1, **args):
+    def __init__(self, root, profile, value=1, **args):
         """Constructor."""
-        super().__init__(root, profile, index, value, **args)
+        super().__init__(root, profile, value, **args)
         self.argument_adaptor = None
 
     def should_skip_frame(self, frame, frame_extras):
@@ -548,6 +548,9 @@ def get_flame_graph(profile, pid_comm, **args):
     inverted = args.get("inverted", False)
     package_name = args.get("package_name", False)
     use_sample_value = args.get("use_sample_value", False)
+    cpu = args.get("cpu", None)
+    pid = args.get("pid", None)
+    tid = args.get("tid", None)
     stack_processor_class = args.get("stack_processor", StackProcessor)
 
     nodes = profile.nodes
@@ -557,12 +560,25 @@ def get_flame_graph(profile, pid_comm, **args):
     time_deltas = profile.time_deltas
     start_time = profile.start_time
 
+    has_samples_cpu = \
+        'has_samples_cpu' in profile.params and profile.params['has_samples_cpu'] == 'true'
+    
+    has_samples_pid = \
+        'has_samples_pid' in profile.params and profile.params['has_samples_pid'] == 'true'
+    
+    has_samples_tid = \
+        'has_samples_tid' in profile.params and profile.params['has_samples_tid'] == 'true'
+
     sample_filters = [
-        RangeSampleFilter(profile, **args),
-        CPUSampleFilter(profile, **args),
-        PIDSampleFilter(profile, **args),
-        TIDSampleFilter(profile, **args)
+        RangeSampleFilter(profile, **args)
     ]
+
+    if has_samples_cpu and cpu:
+        sample_filter.append(CPUSampleFilter(profile, **args))
+    if has_samples_pid and pid:
+        sample_filter.append(PIDSampleFilter(profile, **args))
+    if has_samples_tid and tid:
+        sample_filter.append(TIDSampleFilter(profile, **args))
 
     root = {
         'name': 'root',
@@ -587,6 +603,8 @@ def get_flame_graph(profile, pid_comm, **args):
         # case for very old nflxprofile
         stacks = _generate_stacks(nodes, root_id, package_name)
 
+    aggregated_samples = {}
+
     for index, sample in enumerate(samples):
         if index == (len(samples) - 1):  # last sample
             break
@@ -604,7 +622,13 @@ def get_flame_graph(profile, pid_comm, **args):
         sample_value = 1
         if use_sample_value:
             sample_value = samples_value[index] if samples_value else None
-        stack_processor = stack_processor_class(root, profile, index, sample_value, **args)
+
+
+        if sample not in aggregated_samples:
+            aggregated_samples[sample] = 0
+        aggregated_samples[sample] += sample_value
+
+        stack_processor = stack_processor_class(root, profile, sample_value, **args)
 
         if stacks:
             stack = stacks[sample] if not inverted else reversed(stacks[sample])
