@@ -160,24 +160,23 @@ class Frame:
 class StackProcessor:
     """Processes a stack trace, extend it to add custom processing."""
 
-    def __init__(self, root, profile, value=1, **args):
+    def __init__(self, root, profile, **args):
         """Constructor."""
+        self.root_node = root
         self.current_node = root
-        self.value = value
-        self.empty_extras = FrameExtras()
         self.ignore_libtype = args.get("ignore_libtype", False)
         self.middle_out = args.get("middle_out", None)
 
     def process_frame(self, frame):
         """Process one frame, returning the processed frame plus extras."""
-        return frame, self.empty_extras
+        return frame, FrameExtras()
 
     # pylint: disable=no-self-use
-    def should_skip_frame(self, frame, frame_extras):
+    def should_skip_frame(self, frame, frame_extras, value):
         """Check if this frame should be skipped."""
         return False
 
-    def process_extras(self, child, frame, frame_extras):
+    def process_extras(self, child, frame, frame_extras, value):
         """Process extras and save it in the given node."""
         extras = child.get('extras', {})
         if frame.file.file_name:
@@ -188,7 +187,7 @@ class StackProcessor:
         if bool(extras):
             child['extras'] = extras
 
-    def process(self, stack):
+    def process(self, stack, value):
         """Processes a stack trace.
 
         You probably want to avoid overriding this method. Override other
@@ -197,7 +196,7 @@ class StackProcessor:
         middle_out_filter = True
         for i, frame in enumerate(stack):
             frame, frame_extras = self.process_frame(frame)
-            if self.should_skip_frame(frame, frame_extras):
+            if self.should_skip_frame(frame, frame_extras, value):
                 continue
 
             if self.middle_out and middle_out_filter:
@@ -226,11 +225,13 @@ class StackProcessor:
                 }
                 child['libtype'] = "" if self.ignore_libtype else frame.libtype
                 self.current_node['children'].append(child)
-            self.process_extras(child, frame, frame_extras)
+            self.process_extras(child, frame, frame_extras, value)
             self.current_node = child
         # if the whole stack was skipped, current_node is still root
         # value goes to root
-        self.current_node['value'] = self.current_node['value'] + self.value
+        self.current_node['value'] = self.current_node['value'] + value
+        # set current node back to root
+        self.current_node = self.root_node
 
 
 class JavaStackProcessor(StackProcessor):
@@ -239,11 +240,11 @@ class JavaStackProcessor(StackProcessor):
     Sanitize function names, remove interpreter frames.
     """
 
-    def __init__(self, root, profile, value=1, **args):
+    def __init__(self, root, profile, **args):
         """Constructor."""
-        super().__init__(root, profile, value, **args)
+        super().__init__(root, profile, **args)
 
-    def should_skip_frame(self, frame, frame_extras):
+    def should_skip_frame(self, frame, frame_extras, value):
         """Skip Interpreter frames."""
         if "Interpreter" in frame.function_name:
             return True
@@ -268,14 +269,14 @@ class JavaStackProcessor(StackProcessor):
 
         processed_frame.function_name = name
 
-        return processed_frame, self.empty_extras
+        return processed_frame, FrameExtras()
 
 
 class NodeJsPackageStackProcessor(StackProcessor):
 
-    def __init__(self, root, profile, value=1, **args):
+    def __init__(self, root, profile, **args):
         """Constructor."""
-        super().__init__(root, profile, value, **args)
+        super().__init__(root, profile, **args)
         self.current_package = None
         self.packages_cache = {}
 
@@ -330,7 +331,7 @@ class NodeJsPackageStackProcessor(StackProcessor):
             return True
         return False
 
-    def process(self, stack):
+    def process(self, stack, value):
         # We always start with native
         current_frame = nflxprofile_pb2.StackFrame()
         current_frame.function_name = "(native)"
@@ -353,7 +354,7 @@ class NodeJsPackageStackProcessor(StackProcessor):
 
         processed_stack.append(current_frame)
 
-        return super().process(processed_stack)
+        return super().process(processed_stack, value)
 
 
 class NodeJsStackProcessor(StackProcessor):
@@ -365,12 +366,12 @@ class NodeJsStackProcessor(StackProcessor):
     can exhibit this information on the interface).
     """
 
-    def __init__(self, root, profile, value=1, **args):
+    def __init__(self, root, profile, **args):
         """Constructor."""
-        super().__init__(root, profile, value, **args)
+        super().__init__(root, profile, **args)
         self.argument_adaptor = None
 
-    def should_skip_frame(self, frame, frame_extras):
+    def should_skip_frame(self, frame, frame_extras, value):
         """Skip ArgumentsAdaptorTrampoline.
 
         ArgumentsAdaptorTrampoline frames are inserted between calls when the
@@ -380,11 +381,11 @@ class NodeJsStackProcessor(StackProcessor):
         information about it in the following frame when hovering it.
         """
         if "ArgumentsAdaptorTrampoline" in frame.function_name:
-            self.argument_adaptor = self.value
+            self.argument_adaptor = value
             return True
         return False
 
-    def process_extras(self, child, frame, frame_extras):
+    def process_extras(self, child, frame, frame_extras, value):
         """Add Node.js specific extras.
 
         Add % of times a function was called with mismatched arguments, % of
@@ -394,13 +395,13 @@ class NodeJsStackProcessor(StackProcessor):
         extras = child.get('extras', {'optimized': 0})
         extras['javascript'] = frame_extras.javascript
         extras['v8_jit'] = frame_extras.v8_jit
-        extras['optimized'] = extras['optimized'] + (frame_extras.optimized and self.value or 0)
+        extras['optimized'] = extras['optimized'] + (frame_extras.optimized and value or 0)
         extras['realName'] = frame_extras.real_name
         if self.argument_adaptor:
             extras['argumentAdaptor'] = extras.get('argumentAdaptor', 0) + self.argument_adaptor
             self.argument_adaptor = None
         child['extras'] = extras
-        super().process_extras(child, frame, frame_extras)
+        super().process_extras(child, frame, frame_extras, value)
 
     def process_frame(self, frame):
         """Process frame.
@@ -559,34 +560,16 @@ def get_flame_graph(profile, pid_comm, **args):
     samples = profile.samples
     time_deltas = profile.time_deltas
     start_time = profile.start_time
+    current_time = start_time + time_deltas[0]
 
     has_samples_cpu = \
         'has_samples_cpu' in profile.params and profile.params['has_samples_cpu'] == 'true'
-    
+
     has_samples_pid = \
         'has_samples_pid' in profile.params and profile.params['has_samples_pid'] == 'true'
-    
+
     has_samples_tid = \
         'has_samples_tid' in profile.params and profile.params['has_samples_tid'] == 'true'
-
-    sample_filters = [
-        RangeSampleFilter(profile, **args)
-    ]
-
-    if has_samples_cpu and cpu:
-        sample_filter.append(CPUSampleFilter(profile, **args))
-    if has_samples_pid and pid:
-        sample_filter.append(PIDSampleFilter(profile, **args))
-    if has_samples_tid and tid:
-        sample_filter.append(TIDSampleFilter(profile, **args))
-
-    root = {
-        'name': 'root',
-        'libtype': '',
-        'value': 0,
-        'children': []
-    }
-    current_time = start_time + time_deltas[0]
 
     has_node_stack = \
         'has_node_stack' in profile.params and profile.params['has_node_stack'] == 'true'
@@ -597,6 +580,17 @@ def get_flame_graph(profile, pid_comm, **args):
     if 'hasValues' in profile.params and profile.params['hasValues'] == 'true':
         samples_value = profile.samples_value
 
+    sample_filters = [
+        RangeSampleFilter(profile, **args)
+    ]
+
+    if has_samples_cpu and cpu:
+        sample_filters.append(CPUSampleFilter(profile, **args))
+    if has_samples_pid and pid:
+        sample_filters.append(PIDSampleFilter(profile, **args))
+    if has_samples_tid and tid:
+        sample_filters.append(TIDSampleFilter(profile, **args))
+
     stacks = None
     if (not has_node_stack) and (not has_parent):
         # don't have stacks or parent pointer, generating stacks manually
@@ -604,7 +598,6 @@ def get_flame_graph(profile, pid_comm, **args):
         stacks = _generate_stacks(nodes, root_id, package_name)
 
     aggregated_samples = {}
-
     for index, sample in enumerate(samples):
         if index == (len(samples) - 1):  # last sample
             break
@@ -623,17 +616,26 @@ def get_flame_graph(profile, pid_comm, **args):
         if use_sample_value:
             sample_value = samples_value[index] if samples_value else None
 
-
         if sample not in aggregated_samples:
             aggregated_samples[sample] = 0
         aggregated_samples[sample] += sample_value
 
-        stack_processor = stack_processor_class(root, profile, sample_value, **args)
+    root = {
+        'name': 'root',
+        'libtype': '',
+        'value': 0,
+        'children': []
+    }
+
+    stack_processor = stack_processor_class(root, profile, **args)
+
+    for sample_id in aggregated_samples:
+        sample_value = aggregated_samples[sample_id]
 
         if stacks:
-            stack = stacks[sample] if not inverted else reversed(stacks[sample])
+            stack = stacks[sample_id] if not inverted else reversed(stacks[sample_id])
         else:
-            stack = _get_stack(nodes, sample, has_node_stack, pid_comm, **args)
+            stack = _get_stack(nodes, sample_id, has_node_stack, pid_comm, **args)
 
-        stack_processor.process(stack)
+        stack_processor.process(stack, sample_value)
     return root
