@@ -100,7 +100,7 @@ def _get_stack(nflxprofile_nodes, node_id, has_node_stack=False, pid_comm=None, 
             stack_frame.libtype = nflxprofile_nodes[node_id].libtype
             stack.append(stack_frame)
         if inverted:
-            return reversed(stack)
+            return stack[::-1]
         return stack
 
     # has node stack calculated, returning that
@@ -114,7 +114,7 @@ def _get_stack(nflxprofile_nodes, node_id, has_node_stack=False, pid_comm=None, 
         stack_frame.libtype = nflxprofile_nodes[node_id].libtype
         stack = [stack_frame] + list(nflxprofile_nodes[node_id].stack)
         if inverted:
-            return reversed(stack)
+            return stack[::-1]
         return stack
 
     # need to use parent id
@@ -633,7 +633,7 @@ def get_flame_graph(profile, pid_comm, **args):
         sample_value = aggregated_samples[sample_id]
 
         if stacks:
-            stack = stacks[sample_id] if not inverted else reversed(stacks[sample_id])
+            stack = stacks[sample_id] if not inverted else stacks[sample_id][::-1]
         else:
             stack = _get_stack(nodes, sample_id, has_node_stack, pid_comm, **args)
 
