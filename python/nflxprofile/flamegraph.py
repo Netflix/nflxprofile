@@ -259,7 +259,7 @@ class JavaStackProcessor(StackProcessor):
         name = name.split('::')[0]
         name = name.split('$$')[0]
 
-        if frame.libtype and frame.libtype == 'jit' and name.startswith("L"):
+        if frame.libtype and frame.libtype in ['jit', 'inlined'] and name.startswith("L"):
             name = name[1:]
 
         if name.endswith(';'):
