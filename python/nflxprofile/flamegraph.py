@@ -255,19 +255,23 @@ class JavaStackProcessor(StackProcessor):
         processed_frame = nflxprofile_pb2.StackFrame()
         processed_frame.CopyFrom(frame)
         name = frame.function_name
+        name_parts = name.split('::')
 
-        name = name.split('::')[0]
-        name = name.split('$$')[0]
+        class_name = name_parts[0]
+        class_name = class_name.split('$$')[0]
 
-        if frame.libtype and frame.libtype in ['jit', 'inlined'] and name.startswith("L"):
-            name = name[1:]
+        if frame.libtype and frame.libtype in ['jit', 'inlined'] and class_name.startswith("L"):
+            class_name = class_name[1:]
 
-        if name.endswith(';'):
-            name = name[:-1]
+        if class_name.endswith(';'):
+            class_name = class_name[:-1]
 
-        name = name.replace('/', '.')
+        class_name = class_name.replace('/', '.')
 
-        processed_frame.function_name = name
+        if len(name_parts) > 1:
+            processed_frame.function_name = class_name + "::" + name_parts[1]
+        else:
+            processed_frame.function_name = class_name
 
         return processed_frame, FrameExtras()
 
