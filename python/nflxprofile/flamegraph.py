@@ -603,8 +603,6 @@ def get_flame_graph(profile, pid_comm, **args):
 
     aggregated_samples = {}
     for index, sample in enumerate(samples):
-        if index == (len(samples) - 1):  # last sample
-            break
         current_time += time_deltas[index]
 
         should_skip = False
