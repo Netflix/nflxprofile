@@ -564,7 +564,7 @@ def get_flame_graph(profile, pid_comm, **args):
     samples = profile.samples
     time_deltas = profile.time_deltas
     start_time = profile.start_time
-    current_time = start_time + time_deltas[0]
+    current_time = start_time
 
     has_samples_cpu = \
         'has_samples_cpu' in profile.params and profile.params['has_samples_cpu'] == 'true'
@@ -605,8 +605,7 @@ def get_flame_graph(profile, pid_comm, **args):
     for index, sample in enumerate(samples):
         if index == (len(samples) - 1):  # last sample
             break
-        delta = time_deltas[index + 1]
-        current_time += delta
+        current_time += time_deltas[index]
 
         should_skip = False
         for sample_filter in sample_filters:
