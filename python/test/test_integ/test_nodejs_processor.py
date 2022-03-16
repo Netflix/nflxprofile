@@ -18,4 +18,5 @@ class TestNodeJsStackProcessor(unittest.TestCase):
 
         fg = get_flame_graph(profile, None,
                              stack_processor=NodeJsStackProcessor)
+        self.maxDiff = None
         self.assertDictEqual(fg, expected)

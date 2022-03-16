@@ -430,10 +430,36 @@ class NodeJsStackProcessor(StackProcessor):
             if name and name[0] == '*':
                 name = name[1:]
 
+            # The nodejs-JIT captured name may have multiple splits, in the case of classes
+            # such as
+            #
+            # class User {
+            #    get email() { ... }
+            # }
+            #
+            # this shows up as LazyCompile:get email /path/to/source.js:xx
+
+            # "Function names can contain letters, digits, underscores, and dollar signs"
+
+            # So, here, we detect the filename field based on the presence
+            # of any function-name characters
+
             if " " in name:
-                frame.file.file_name = name[name.index(" ") + 1:]
-                if frame.file.file_name:
-                    name = name[:name.index(" ")]
+                in_file_mode = False
+                name_parts = name.split(" ")
+                name = ""
+                frame.file.file_name = ""
+                for name_part in name_parts:
+                    if "/" in name_part or ":" in name_part:
+                        in_file_mode = True
+
+                    if in_file_mode:
+                        frame.file.file_name += name_part + " "
+                    else:
+                        name += name_part + " "
+
+                frame.file.file_name = frame.file.file_name[:-1]
+                name = name[:-1]
             processed_frame.function_name = name or "(anonymous)"
 
         return processed_frame, frame_extras
