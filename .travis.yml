@@ -3,7 +3,7 @@ matrix:
     - name: Python
       language: python
       python:
-        - '3.6'
+        - '3.7'
 
       before_script: cd python/ && pip3 install tox
 
