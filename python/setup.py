@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="nflxprofile",
-    version="1.6.6",
+    version="1.6.7",
     author="Mary Marchini",
     author_email="mmarchini@netflix.com",
     description="Protobuf specification of the nflxprofile format",
@@ -13,7 +13,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/Netflix/nflxprofile",
     packages=setuptools.find_packages(),
-    install_requires=['protobuf'],
+    install_requires=['protobuf>=4.21.1'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: Apache Software License",
