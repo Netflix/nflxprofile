@@ -1,13 +1,16 @@
+language: python
 matrix:
   include:
     - name: Python
-      language: python
-      python:
-        - '3.7'
+      python: 3.7
 
-      before_script: cd python/ && pip3 install tox
+      before_install: cd python/
+      install:
+        # Pin setuptools to prevent build failures. See https://github.com/pypa/setuptools/issues/3118
+        - pip install setuptools==59.6.0
+        - pip install tox
 
-      script: python3 -m tox
+      script: python -m tox
 
       deploy:
         skip_cleanup: true
